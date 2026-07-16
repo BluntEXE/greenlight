@@ -6,3 +6,4 @@ packages/docs/.source
 dist/
 packages/pages/public
 .superpowers/
+**/tsconfig.tsbuildinfo
