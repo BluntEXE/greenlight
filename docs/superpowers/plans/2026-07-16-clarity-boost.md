@@ -257,7 +257,15 @@ import { getClarityBoostFilter } from '../../../lib/clarityBoost'
 
 - [ ] **Step 2: Locate the video element and apply the filter**
 
-The `<video>` element is created asynchronously by `xbox-xcloud-player` inside the container div (`id="streamComponent"`) once the WebRTC video track arrives — it doesn't exist immediately after `xPlayer.bind()` returns. Use a `MutationObserver` to catch it as soon as it's added, matching the existing effect block structure. In the same `React.useEffect` block that calls `xPlayer.bind()` (right after the `xPlayer.setControllerRumble(settings.controller_vibration)` line), add:
+The `<video>` element is created asynchronously by `xbox-xcloud-player` inside the container div (`id="streamComponent"`) once the WebRTC video track arrives — it doesn't exist immediately after `xPlayer.bind()` returns. Use a `MutationObserver` to catch it as soon as it's added, matching the existing effect block structure.
+
+**Declare the observer in the same outer scope as the effect's existing `streamStateInterval`/`keepaliveInterval` variables** (not as a `const` inside the effect body) — the effect's cleanup function needs to reach it to call `.disconnect()`. This was missed in the first pass of this task and fixed in a follow-up commit (`8b4763c`) after code review caught a dangling-observer risk: if the user disconnects before the video track arrives, an observer declared purely as a local `const` inside the `if` block is unreachable from cleanup and never gets disconnected. Declare it correctly the first time:
+
+```ts
+let clarityBoostObserver
+```
+
+alongside the existing `streamStateInterval`/`keepaliveInterval` declarations near the top of the effect. Then, in the same `React.useEffect` block that calls `xPlayer.bind()` (right after the `xPlayer.setControllerRumble(settings.controller_vibration)` line), add:
 
 ```ts
             const streamHolder = document.getElementById('streamComponent')
@@ -272,17 +280,25 @@ The `<video>` element is created asynchronously by `xbox-xcloud-player` inside t
                 }
 
                 if (!applyFilterIfPresent()) {
-                    const observer = new MutationObserver(() => {
+                    clarityBoostObserver = new MutationObserver(() => {
                         if (applyFilterIfPresent()) {
-                            observer.disconnect()
+                            clarityBoostObserver.disconnect()
                         }
                     })
-                    observer.observe(streamHolder, { childList: true, subtree: true })
+                    clarityBoostObserver.observe(streamHolder, { childList: true, subtree: true })
                 }
             }
 ```
 
 If `streamHolder` is `null` (DOM not ready yet, or structure changed), this block is skipped entirely — the stream still plays, just unfiltered. This matches the design spec's error-handling requirement: never block the stream over a missing filter target.
+
+Finally, add a guarded disconnect call to the effect's existing cleanup return function, alongside where it already clears `streamStateInterval`/`keepaliveInterval`:
+
+```ts
+            if (clarityBoostObserver) {
+                clarityBoostObserver.disconnect()
+            }
+```
 
 - [ ] **Step 3: Manual verification**
 
@@ -302,3 +318,4 @@ git commit -m "feat: apply Clarity Boost CSS filter to the stream video element"
 - **Spec coverage:** covers the Clarity Boost section of `docs/superpowers/specs/2026-07-16-better-xcloud-parity-design.md` in full — pure-function approach, Settings UI, DOM-filter application, fail-open error handling.
 - **No placeholders:** all code blocks are complete and copy-pasteable; manual-verification steps are labeled as such rather than presented as automated tests, since no DOM/Electron test harness exists in this package to genuinely automate them.
 - **Type consistency:** `getClarityBoostFilter(strength: number): string` is defined once in Task 2 and imported with that exact name/signature in Task 4 — no renaming across tasks.
+- **Post-ship correction (2026-07-16):** Task 4's Step 2 originally showed the `MutationObserver` as a block-scoped `const observer`, which code quality review correctly flagged as unreachable from the effect's cleanup function (dangling-observer risk if the user disconnects before the video track arrives). Fixed in commit `8b4763c` by hoisting it to a `let clarityBoostObserver` declared alongside the effect's existing interval variables, with a guarded `.disconnect()` added to cleanup. This doc has been updated in place to show the corrected pattern — the "no renaming across tasks" claim above refers to `getClarityBoostFilter` only, not this observer variable, which was renamed as part of the fix.
