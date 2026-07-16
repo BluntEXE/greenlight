@@ -8,18 +8,19 @@
 .touch-zone {
     position: absolute;
     display: flex;
-    flex-wrap: wrap;
     gap: 12px;
     pointer-events: none;
 }
 
 /*
- * All four thumb-cluster zones (left-inner/outer, right-inner/outer) sit
- * within the bottom third of the screen, close together, matching how
- * real touch controllers (Xbox app, Steam Link) cluster controls near
- * where thumbs naturally rest rather than spreading them top-to-bottom.
- * top-right is the one deliberate exception - reserved for rare-use
- * controls (e.g. handbrake) that should require lifting a thumb to reach.
+ * "Inner" zones (left-inner, right-inner) anchor from the bottom and grow
+ * upward - the primary movement/action controls a thumb rests on.
+ * "Outer" zones (left-outer, right-outer) anchor from the top and grow
+ * downward instead, so a multi-item stack never has to guess which
+ * direction to grow in and can't collide with the inner zone growing up
+ * from the opposite edge. top-right is the one deliberate exception -
+ * reserved for rare-use controls (e.g. Menu/View, handbrake) that should
+ * require lifting a thumb to reach.
  */
 .touch-zone-left-inner {
     bottom: 6%;
@@ -27,9 +28,9 @@
 }
 
 .touch-zone-left-outer {
-    bottom: 30%;
+    top: 10%;
     left: 8%;
-    max-width: 150px;
+    flex-direction: column;
 }
 
 .touch-zone-right-inner {
@@ -40,10 +41,10 @@
 }
 
 .touch-zone-right-outer {
-    bottom: 30%;
+    top: 16%;
     right: 6%;
-    max-width: 150px;
-    justify-content: flex-end;
+    flex-direction: column;
+    align-items: flex-end;
 }
 
 .touch-zone-top-right {
