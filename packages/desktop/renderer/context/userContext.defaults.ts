@@ -35,6 +35,7 @@ export const defaultSettings = {
     },
     input_newgamepad: false,
     app_lowresolution: false,
+    clarity_boost_strength: 0,
 
     video_enabled: true,
     audio_enabled: true,

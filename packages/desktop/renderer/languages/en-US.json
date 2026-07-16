@@ -148,6 +148,8 @@
         "aspectSizeValueZoom": "Zoom",
         "forceLowResLabel": "Force low resolution video",
         "forceLowResDescription": "(This option is useful on the Steam Deck and enables the application to render in a low resolution so FSR can be enabled.)",
+        "clarityBoostLabel": "Clarity Boost",
+        "clarityBoostDescription": "(Sharpens the video image. Higher values increase contrast and color saturation.)",
         "audioTitle": "Audio",
         "disableAudioLabel": "Disable audio"
       },

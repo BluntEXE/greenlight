@@ -32,6 +32,13 @@ function SettingsVideo() {
         })
     }
 
+    function setClarityBoost(e){
+        setSettings({
+            ...settings,
+            clarity_boost_strength: parseFloat(e.target.value),
+        })
+    }
+
     function setAudioEnabled(){
         setSettings({
             ...settings,
@@ -80,6 +87,14 @@ function SettingsVideo() {
                             <input type='checkbox' onChange={ forceLowResolution } checked={settings.app_lowresolution} />&nbsp; ({ settings.app_lowresolution ? t('settings.videoAudio.enabledLabel') : t('settings.videoAudio.disabledLabel')})
                         </label><br />
                         <small>{t('settings.videoAudio.forceLowResDescription')}</small>
+                    </p>
+
+                    <p>
+                        <label>{t('settings.videoAudio.clarityBoostLabel')}</label>
+                        <input type="range" min="0" max="1" step="0.05" value={settings.clarity_boost_strength} onChange={ setClarityBoost } />
+                        ({ settings.clarity_boost_strength })
+                        <br />
+                        <small>{t('settings.videoAudio.clarityBoostDescription')}</small>
                     </p>
                 </Card>
 
