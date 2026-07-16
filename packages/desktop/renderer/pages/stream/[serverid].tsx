@@ -9,6 +9,7 @@ import StreamPreload from '../../components/ui/streampreload'
 import Ipc from '../../lib/ipc'
 import { useTranslation } from 'react-i18next'
 import { getClarityBoostFilter } from '../../../lib/clarityBoost'
+import { getCodecMimeType } from '../../../lib/codecPreference'
 
 function Stream() {
     const router = useRouter()
@@ -41,8 +42,9 @@ function Stream() {
                 xPlayer.setVideoBitrate((streamType === 'cloud') ? settings.xcloud_bitrate : settings.xhome_bitrate)
             }
 
-            if(settings.video_profiles.length > 0){
-                xPlayer.setCodecPreferences('video/H264', { profiles: settings.video_profiles || [] }) // 4d = high, 42e = mid, 420 = low
+            const codecMimeType = getCodecMimeType(settings.video_codec)
+            if(settings.video_profiles.length > 0 || codecMimeType !== 'video/H264'){
+                xPlayer.setCodecPreferences(codecMimeType, { profiles: settings.video_profiles || [] }) // profiles only meaningfully filter H.264; harmless no-op for AV1/HEVC
             }
 
             // Stream is ready so we start the player
