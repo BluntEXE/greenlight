@@ -8,6 +8,7 @@ export const defaultSettings = {
     video_size: 'default',
     force_region_ip: '',
     input_touch: false,
+    touch_layout_preset: 'standard',
     input_mousekeyboard: false,
     input_mousekeyboard_config: {
         ArrowLeft: 'DPadLeft',

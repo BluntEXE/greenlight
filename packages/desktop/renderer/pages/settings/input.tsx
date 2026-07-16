@@ -116,6 +116,13 @@ function SettingsInput() {
         })
     }
 
+    function setTouchLayoutPreset(preset){
+        setSettings({
+            ...settings,
+            touch_layout_preset: preset,
+        })
+    }
+
     function setMKBInput(){
         setSettings({
             ...settings,
@@ -176,6 +183,15 @@ function SettingsInput() {
                         <label style={{ minWidth: 0 }}>
                             <input type='checkbox' onChange={ setTouchInput } checked={settings.input_touch} />&nbsp; ({ settings.input_touch ? t('settings.input.enabledLabel') : t('settings.input.disabledLabel')})
                         </label>
+                    </p>
+
+                    <p>
+                        <label>{t('settings.input.touchLayoutPresetLabel')}</label>
+                        <select value={ settings.touch_layout_preset || 'standard' } onChange={ (e) => setTouchLayoutPreset(e.target.value) }>
+                            <option value='standard'>{t('settings.input.touchLayoutPresetValueStandard')}</option>
+                            <option value='racing'>{t('settings.input.touchLayoutPresetValueRacing')}</option>
+                            <option value='minimal'>{t('settings.input.touchLayoutPresetValueMinimal')}</option>
+                        </select>
                     </p>
 
                     <p>
