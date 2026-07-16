@@ -2,14 +2,44 @@ export type ZoneName = 'left-inner' | 'left-outer' | 'right-inner' | 'right-oute
 
 export type TouchControlType = 'button' | 'dpad' | 'stick'
 
-export interface TouchControl {
-    type: TouchControlType
-    // 'button': one InputFrame boolean/trigger field name (e.g. 'A', 'RightTrigger').
-    // 'stick': 'left' or 'right', selects which pair of InputFrame axis fields to drive.
-    // 'dpad': unused (''), a dpad control always drives all 4 DPad* fields.
-    input: string
+// Every InputFrame field a 'button' control is allowed to target. Kept in
+// sync with InputFrame manually (touchoverlay.tsx's createEmptyFrame() has
+// the matching field list) since importing InputFrame's real type here
+// would pull in the xbox-xcloud-player dependency for a lib module that's
+// otherwise dependency-free.
+export type InputFrameKey =
+    | 'GamepadIndex' | 'Nexus' | 'Menu' | 'View'
+    | 'A' | 'B' | 'X' | 'Y'
+    | 'DPadUp' | 'DPadDown' | 'DPadLeft' | 'DPadRight'
+    | 'LeftShoulder' | 'RightShoulder'
+    | 'LeftThumb' | 'RightThumb'
+    | 'LeftThumbXAxis' | 'LeftThumbYAxis'
+    | 'RightThumbXAxis' | 'RightThumbYAxis'
+    | 'LeftTrigger' | 'RightTrigger'
+
+export type StickSide = 'left' | 'right'
+
+export interface TouchButtonControl {
+    type: 'button'
+    input: InputFrameKey
     label: string
 }
+
+export interface TouchDpadControl {
+    type: 'dpad'
+    // Unused: a dpad control always drives all 4 DPad* fields directly.
+    input: ''
+    label: string
+}
+
+export interface TouchStickControl {
+    type: 'stick'
+    // Selects which pair of InputFrame axis fields (Left*/Right*) this stick drives.
+    input: StickSide
+    label: string
+}
+
+export type TouchControl = TouchButtonControl | TouchDpadControl | TouchStickControl
 
 export type TouchLayout = Partial<Record<ZoneName, TouchControl[]>>
 

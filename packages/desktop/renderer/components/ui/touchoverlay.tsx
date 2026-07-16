@@ -1,5 +1,5 @@
 import React from 'react'
-import { getTouchLayoutPreset, TouchControl, ZoneName } from '../../../lib/touchLayouts'
+import { getTouchLayoutPreset, InputFrameKey, TouchControl, ZoneName } from '../../../lib/touchLayouts'
 import { getStickAxes, getDpadDirection } from '../../../lib/touchGestures'
 import './touchoverlay.css'
 
@@ -30,6 +30,14 @@ function TouchOverlay({ xPlayer, preset }: TouchOverlayProps) {
 
     React.useEffect(() => {
         const interval = setInterval(() => {
+            // A physical controller pushes onto the same gamepad frame queue
+            // with no merge. Don't push an all-zero (or stale) touch frame
+            // on top of live controller input while one is connected.
+            const hasPhysicalGamepad = navigator.getGamepads().some((g) => g !== null)
+            if (hasPhysicalGamepad) {
+                return
+            }
+
             xPlayer?.getChannelProcessor('input')?.queueGamepadState({ ...frameRef.current })
         }, 16)
 
@@ -38,11 +46,11 @@ function TouchOverlay({ xPlayer, preset }: TouchOverlayProps) {
         }
     }, [xPlayer])
 
-    function handleButtonStart(input: string) {
+    function handleButtonStart(input: InputFrameKey) {
         frameRef.current[input] = 1
     }
 
-    function handleButtonEnd(input: string) {
+    function handleButtonEnd(input: InputFrameKey) {
         frameRef.current[input] = 0
     }
 
@@ -92,15 +100,15 @@ function TouchOverlay({ xPlayer, preset }: TouchOverlayProps) {
 
     function renderControl(control: TouchControl, key: string) {
         if (control.type === 'stick') {
-            const side = control.input as 'left' | 'right'
+            const side = control.input
             return (
                 <div
                     key={key}
                     className='touch-control touch-stick'
-                    onPointerDown={(e) => handleStickMove(side, e)}
+                    onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); handleStickMove(side, e) }}
                     onPointerMove={(e) => { if (e.buttons > 0) handleStickMove(side, e) }}
-                    onPointerUp={() => handleStickEnd(side)}
-                    onPointerLeave={() => handleStickEnd(side)}
+                    onPointerUp={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); handleStickEnd(side) }}
+                    onPointerCancel={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); handleStickEnd(side) }}
                 >{control.label}</div>
             )
         }
@@ -110,10 +118,10 @@ function TouchOverlay({ xPlayer, preset }: TouchOverlayProps) {
                 <div
                     key={key}
                     className='touch-control touch-dpad'
-                    onPointerDown={handleDpadMove}
+                    onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); handleDpadMove(e) }}
                     onPointerMove={(e) => { if (e.buttons > 0) handleDpadMove(e) }}
-                    onPointerUp={handleDpadEnd}
-                    onPointerLeave={handleDpadEnd}
+                    onPointerUp={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); handleDpadEnd() }}
+                    onPointerCancel={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); handleDpadEnd() }}
                 >{control.label}</div>
             )
         }
@@ -122,9 +130,9 @@ function TouchOverlay({ xPlayer, preset }: TouchOverlayProps) {
             <div
                 key={key}
                 className='touch-control touch-button'
-                onPointerDown={() => handleButtonStart(control.input)}
-                onPointerUp={() => handleButtonEnd(control.input)}
-                onPointerLeave={() => handleButtonEnd(control.input)}
+                onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); handleButtonStart(control.input) }}
+                onPointerUp={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); handleButtonEnd(control.input) }}
+                onPointerCancel={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); handleButtonEnd(control.input) }}
             >{control.label}</div>
         )
     }
