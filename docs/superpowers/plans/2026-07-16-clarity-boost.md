@@ -63,12 +63,16 @@ with:
 
 - [ ] **Step 2: Create the mocha config**
 
-Create `packages/desktop/.mocharc.json`:
+Create `packages/desktop/.mocharc.json`. Note: unlike `packages/player`'s
+config, the spec glob is narrowed to `tests/lib/**/*.spec.ts` rather than
+`tests/**/*.spec.ts` — `packages/desktop/tests/boot.spec.ts` is a
+pre-existing Playwright e2e test that would otherwise match the same glob
+and crash mocha trying to load `@playwright/test` as a unit test file:
 
 ```json
 {
     "extension": ["ts"],
-    "spec": "tests/**/*.spec.ts",
+    "spec": "tests/lib/**/*.spec.ts",
     "require": "tsx"
 }
 ```
@@ -81,7 +85,7 @@ Expected: completes without errors, `node_modules/.bin/mocha` and `node_modules/
 - [ ] **Step 4: Verify the runner executes (no tests yet)**
 
 Run: `yarn workspace greenlight-desktop test`
-Expected output: mocha runs, reports `0 passing` (since `tests/lib/clarityBoost.spec.ts` doesn't exist yet — this just confirms the runner itself works before Task 2 adds real tests).
+Expected output: mocha 11.7.5 errors with `Error: No test files found: "tests/lib/**/*.spec.ts"` (exit code 1) — this version has no flag to tolerate a zero-match glob (verified: `packages/player`'s existing, already-working mocha config produces the identical error today, since it also has no test files yet). That error is the correct, expected state here — it confirms mocha itself runs and resolves the config correctly. Task 2 adds the real test file immediately after, which will make it pass for real.
 
 - [ ] **Step 5: Commit**
 
