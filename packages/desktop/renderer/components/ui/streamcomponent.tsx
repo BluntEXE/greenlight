@@ -7,6 +7,8 @@ import Card from './card'
 import uPlot from 'uplot'
 import Ipc from '../../lib/ipc'
 import { useTranslation } from 'react-i18next'
+import TouchOverlay from './touchoverlay'
+import { useSettings } from '../../context/userContext'
 
 interface StreamComponentProps {
     onDisconnect?: () => void;
@@ -20,6 +22,7 @@ function StreamComponent({
     xPlayer,
 }: StreamComponentProps) {
     const { t } = useTranslation()
+    const { settings } = useSettings()
 
     function performance_now_seconds() {
         return performance.now() / 1000.0
@@ -358,6 +361,8 @@ function StreamComponent({
             <div>
                 <div id="streamComponentHolder">
                 </div>
+
+                { settings.input_touch ? <TouchOverlay xPlayer={ xPlayer } preset={ settings.touch_layout_preset } /> : null }
 
                 <div id="component_streamcomponent_loader">
                     <Card className='padbottom'>
