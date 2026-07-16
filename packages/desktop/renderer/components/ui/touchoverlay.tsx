@@ -42,6 +42,7 @@ function TouchOverlay({ xPlayer, preset }: TouchOverlayProps) {
         }, 16)
 
         return () => {
+            xPlayer?.getChannelProcessor('input')?.queueGamepadState(createEmptyFrame())
             clearInterval(interval)
         }
     }, [xPlayer])
