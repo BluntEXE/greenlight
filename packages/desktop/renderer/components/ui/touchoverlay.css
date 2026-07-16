@@ -8,6 +8,7 @@
 .touch-zone {
     position: absolute;
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     pointer-events: none;
 }
@@ -28,6 +29,7 @@
 .touch-zone-left-outer {
     bottom: 30%;
     left: 8%;
+    max-width: 150px;
 }
 
 .touch-zone-right-inner {
@@ -40,6 +42,8 @@
 .touch-zone-right-outer {
     bottom: 30%;
     right: 6%;
+    max-width: 150px;
+    justify-content: flex-end;
 }
 
 .touch-zone-top-right {

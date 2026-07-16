@@ -43,16 +43,35 @@ export type TouchControl = TouchButtonControl | TouchDpadControl | TouchStickCon
 
 export type TouchLayout = Partial<Record<ZoneName, TouchControl[]>>
 
+// Full parity with a real Xbox controller, minus Nexus (already reachable
+// by holding View+Menu together - see design spec). LB/LT cluster with the
+// D-pad on the left, RB/RT/R3 cluster with face buttons on the right,
+// matching which hand operates which control on a physical controller.
+// Menu/View are the two genuinely rare-use controls, so they're the ones
+// placed in the lift-your-thumb top-right zone.
 const STANDARD_LAYOUT: TouchLayout = {
     'left-inner': [{ type: 'stick', input: 'left', label: 'Move' }],
+    'left-outer': [
+        { type: 'dpad', input: '', label: 'D-Pad' },
+        { type: 'button', input: 'LeftShoulder', label: 'LB' },
+        { type: 'button', input: 'LeftTrigger', label: 'LT' },
+        { type: 'button', input: 'LeftThumb', label: 'L3' },
+    ],
     'right-inner': [
+        { type: 'stick', input: 'right', label: 'Look' },
         { type: 'button', input: 'A', label: 'A' },
         { type: 'button', input: 'B', label: 'B' },
+        { type: 'button', input: 'X', label: 'X' },
         { type: 'button', input: 'Y', label: 'Y' },
     ],
     'right-outer': [
         { type: 'button', input: 'RightShoulder', label: 'RB' },
         { type: 'button', input: 'RightTrigger', label: 'RT' },
+        { type: 'button', input: 'RightThumb', label: 'R3' },
+    ],
+    'top-right': [
+        { type: 'button', input: 'Menu', label: 'Menu' },
+        { type: 'button', input: 'View', label: 'View' },
     ],
 }
 

@@ -8,10 +8,22 @@ describe('getTouchLayoutPreset', () => {
         expect(layout['left-inner'][0]).to.deep.equal({ type: 'stick', input: 'left', label: 'Move' })
     })
 
-    it('returns the standard preset with A/B/Y in right-inner', () => {
+    it('returns the standard preset with a right stick and all 4 face buttons in right-inner', () => {
         const layout = getTouchLayoutPreset('standard')
-        const inputs = layout['right-inner'].map((c) => c.input)
-        expect(inputs).to.deep.equal(['A', 'B', 'Y'])
+        expect(layout['right-inner'][0]).to.deep.equal({ type: 'stick', input: 'right', label: 'Look' })
+        const buttonInputs = layout['right-inner'].slice(1).map((c) => c.input)
+        expect(buttonInputs).to.deep.equal(['A', 'B', 'X', 'Y'])
+    })
+
+    it('returns the standard preset with a full button set (minus Nexus)', () => {
+        const layout = getTouchLayoutPreset('standard')
+        const allInputs = Object.values(layout).flat().map((c) => c.input)
+        expect(allInputs).to.include.members([
+            'left', 'right', 'A', 'B', 'X', 'Y',
+            'LeftShoulder', 'RightShoulder', 'LeftTrigger', 'RightTrigger',
+            'LeftThumb', 'RightThumb', 'Menu', 'View',
+        ])
+        expect(allInputs).to.not.include('Nexus')
     })
 
     it('returns the racing preset with a steering stick, not a D-pad', () => {
