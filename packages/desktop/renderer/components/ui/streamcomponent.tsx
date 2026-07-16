@@ -318,6 +318,11 @@ function StreamComponent({
             return
         }
 
+        if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
+            console.log('takeScreenshot: video has no dimensions yet, stream may still be connecting')
+            return
+        }
+
         const canvas = document.createElement('canvas')
         canvas.width = videoElement.videoWidth
         canvas.height = videoElement.videoHeight
