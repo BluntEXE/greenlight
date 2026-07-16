@@ -1,0 +1,71 @@
+.touch-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    pointer-events: none;
+}
+
+.touch-zone {
+    position: absolute;
+    display: flex;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.touch-zone-left-inner {
+    bottom: 8%;
+    left: 6%;
+}
+
+.touch-zone-left-outer {
+    top: 12%;
+    left: 6%;
+}
+
+.touch-zone-right-inner {
+    bottom: 8%;
+    right: 6%;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+}
+
+.touch-zone-right-outer {
+    top: 12%;
+    right: 6%;
+}
+
+.touch-zone-top-right {
+    top: 2%;
+    right: 6%;
+}
+
+.touch-control {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    user-select: none;
+    touch-action: none;
+}
+
+.touch-stick {
+    width: 96px;
+    height: 96px;
+}
+
+.touch-dpad {
+    width: 84px;
+    height: 84px;
+    border-radius: 8px;
+}
+
+.touch-button {
+    width: 56px;
+    height: 56px;
+}
