@@ -12,30 +12,38 @@
     pointer-events: none;
 }
 
+/*
+ * All four thumb-cluster zones (left-inner/outer, right-inner/outer) sit
+ * within the bottom third of the screen, close together, matching how
+ * real touch controllers (Xbox app, Steam Link) cluster controls near
+ * where thumbs naturally rest rather than spreading them top-to-bottom.
+ * top-right is the one deliberate exception - reserved for rare-use
+ * controls (e.g. handbrake) that should require lifting a thumb to reach.
+ */
 .touch-zone-left-inner {
-    bottom: 8%;
+    bottom: 6%;
     left: 6%;
 }
 
 .touch-zone-left-outer {
-    top: 12%;
-    left: 6%;
+    bottom: 30%;
+    left: 8%;
 }
 
 .touch-zone-right-inner {
-    bottom: 8%;
+    bottom: 6%;
     right: 6%;
     flex-direction: column-reverse;
     align-items: flex-end;
 }
 
 .touch-zone-right-outer {
-    top: 12%;
+    bottom: 30%;
     right: 6%;
 }
 
 .touch-zone-top-right {
-    top: 2%;
+    top: 4%;
     right: 6%;
 }
 
@@ -44,9 +52,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.12);
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.18);
+    border: 2px solid rgba(255, 255, 255, 0.55);
     border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
     color: #fff;
     font-size: 13px;
     font-weight: 600;
@@ -59,13 +68,23 @@
     height: 96px;
 }
 
+.touch-stick-nub {
+    width: 40%;
+    height: 40%;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+}
+
 .touch-dpad {
     width: 84px;
     height: 84px;
     border-radius: 8px;
+    font-size: 22px;
 }
 
 .touch-button {
     width: 56px;
     height: 56px;
+    font-size: 16px;
 }

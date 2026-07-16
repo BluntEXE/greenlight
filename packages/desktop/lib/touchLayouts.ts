@@ -45,7 +45,6 @@ export type TouchLayout = Partial<Record<ZoneName, TouchControl[]>>
 
 const STANDARD_LAYOUT: TouchLayout = {
     'left-inner': [{ type: 'stick', input: 'left', label: 'Move' }],
-    'left-outer': [{ type: 'dpad', input: '', label: 'D-Pad' }],
     'right-inner': [
         { type: 'button', input: 'A', label: 'A' },
         { type: 'button', input: 'B', label: 'B' },

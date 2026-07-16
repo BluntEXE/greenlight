@@ -105,11 +105,12 @@ function TouchOverlay({ xPlayer, preset }: TouchOverlayProps) {
                 <div
                     key={key}
                     className='touch-control touch-stick'
+                    title={control.label}
                     onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); handleStickMove(side, e) }}
                     onPointerMove={(e) => { if (e.buttons > 0) handleStickMove(side, e) }}
                     onPointerUp={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); handleStickEnd(side) }}
                     onPointerCancel={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); handleStickEnd(side) }}
-                >{control.label}</div>
+                ><div className='touch-stick-nub'></div></div>
             )
         }
 
@@ -118,11 +119,12 @@ function TouchOverlay({ xPlayer, preset }: TouchOverlayProps) {
                 <div
                     key={key}
                     className='touch-control touch-dpad'
+                    title={control.label}
                     onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); handleDpadMove(e) }}
                     onPointerMove={(e) => { if (e.buttons > 0) handleDpadMove(e) }}
                     onPointerUp={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); handleDpadEnd() }}
                     onPointerCancel={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); handleDpadEnd() }}
-                >{control.label}</div>
+                ><i className='fa-solid fa-arrows-up-down-left-right'></i></div>
             )
         }
 
