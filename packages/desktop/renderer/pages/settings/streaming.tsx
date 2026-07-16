@@ -44,6 +44,14 @@ function SettingsStreaming() {
 
     // video_profiles ([])
 
+    function setVideoCodec(codec){
+        console.log('Set video codec to:', codec)
+        setSettings({
+            ...settings,
+            video_codec: codec,
+        })
+    }
+
     function setPreferredGameLanguage(e){
         setSettings({
             ...settings,
@@ -96,6 +104,15 @@ function SettingsStreaming() {
                             <option value="4d">{t('settings.streaming.setH264ProfileValueHigh')}</option>
                             <option value="42e">{t('settings.streaming.setH264ProfileValueMedium')}</option>
                             <option value="420">{t('settings.streaming.setH264ProfileValueLow')}</option>
+                        </select>
+                    </p>
+
+                    <p>
+                        <label>{t('settings.streaming.setVideoCodecLabel')}</label>
+                        <select value={ settings.video_codec || 'h264' } onChange={ (e) => setVideoCodec(e.target.value) }>
+                            <option value="h264">{t('settings.streaming.setVideoCodecValueH264')}</option>
+                            <option value="av1">{t('settings.streaming.setVideoCodecValueAV1')}</option>
+                            <option value="hevc">{t('settings.streaming.setVideoCodecValueHEVC')}</option>
                         </select>
                     </p>
 
