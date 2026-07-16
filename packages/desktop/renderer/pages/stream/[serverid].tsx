@@ -8,6 +8,7 @@ import StreamComponent from '../../components/ui/streamcomponent'
 import StreamPreload from '../../components/ui/streampreload'
 import Ipc from '../../lib/ipc'
 import { useTranslation } from 'react-i18next'
+import { getClarityBoostFilter } from '../../../lib/clarityBoost'
 
 function Stream() {
     const router = useRouter()
@@ -45,6 +46,28 @@ function Stream() {
 
             // Stream is ready so we start the player
             xPlayer.setControllerRumble(settings.controller_vibration)
+
+            const streamHolder = document.getElementById('streamComponent')
+            if (streamHolder) {
+                const applyFilterIfPresent = () => {
+                    const videoElement = streamHolder.querySelector('video')
+                    if (videoElement) {
+                        videoElement.style.filter = getClarityBoostFilter(settings.clarity_boost_strength)
+                        return true
+                    }
+                    return false
+                }
+
+                if (!applyFilterIfPresent()) {
+                    const observer = new MutationObserver(() => {
+                        if (applyFilterIfPresent()) {
+                            observer.disconnect()
+                        }
+                    })
+                    observer.observe(streamHolder, { childList: true, subtree: true })
+                }
+            }
+
             xPlayer.setSdpHandler((client, offer) => {
                 Ipc.send('streaming', 'sendChatSdp', {
                     sessionId: sessionId,
