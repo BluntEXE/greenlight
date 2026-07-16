@@ -17,6 +17,7 @@ function Stream() {
 
     let streamStateInterval
     let keepaliveInterval
+    let clarityBoostObserver
 
     const [xPlayer, setxPlayer] = React.useState(undefined)
     const [sessionId, setSessionId] = React.useState('')
@@ -59,12 +60,12 @@ function Stream() {
                 }
 
                 if (!applyFilterIfPresent()) {
-                    const observer = new MutationObserver(() => {
+                    clarityBoostObserver = new MutationObserver(() => {
                         if (applyFilterIfPresent()) {
-                            observer.disconnect()
+                            clarityBoostObserver.disconnect()
                         }
                     })
-                    observer.observe(streamHolder, { childList: true, subtree: true })
+                    clarityBoostObserver.observe(streamHolder, { childList: true, subtree: true })
                 }
             }
 
@@ -250,6 +251,10 @@ function Stream() {
 
             if(streamStateInterval){
                 clearInterval(streamStateInterval)
+            }
+
+            if(clarityBoostObserver){
+                clarityBoostObserver.disconnect()
             }
         }
     })
