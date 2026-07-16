@@ -121,8 +121,11 @@ calls sibling methods on the same object.
    existing gamebar/debug overlays in `streamcomponent.tsx`, not inside
    `xbox-xcloud-player`'s own DOM).
 2. The 3 built-in presets as static data.
-3. A simple preset picker (shown when touch is enabled and no
-   customization exists yet for the current title) defaulting to Standard.
+3. A global "Touch Layout Preset" dropdown in Settings → Input (same
+   pattern as the codec-selection dropdown), defaulting to Standard. Not
+   per-title yet — one preset applies everywhere until Phase B adds
+   per-title memory. No new in-stream picker UI for Phase A; building one
+   now would likely just get replaced by Phase B's per-title system.
 4. Held-state input dispatch via direct `queueGamepadState()` injection,
    covering both digital and analog controls uniformly (see corrected
    "Input dispatch" section above) — mode-independent, works regardless
