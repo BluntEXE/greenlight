@@ -149,15 +149,30 @@ anywhere in the dependency.
 
 ### 4. Screenshot capture
 
-**Files:** `packages/desktop/renderer/pages/stream/[serverid].tsx` or
-`streamcomponent.tsx`, new `packages/desktop/main/ipc/*.ts` handler
-(pattern matches existing IPC handlers like `settings.ts`).
+**Files:** `packages/desktop/renderer/components/ui/streamcomponent.tsx`
+(gamebar button + keybind, mirroring the existing debug-toggle pattern in
+the same file), new `packages/desktop/main/ipc/*.ts` handler (pattern
+matches existing IPC handlers like `settings.ts`).
 
-Smallest feature. On a keybind: locate the `<video>` element in the DOM
-(same lookup as Clarity Boost), draw its current frame to an offscreen
+Smallest feature. Locate the `<video>` element in the DOM (same lookup
+pattern as Clarity Boost), draw its current frame to an offscreen
 `<canvas>` via `drawImage()`, `canvas.toBlob()`, pass the blob to the main
-process over IPC, write to disk via Electron's native save dialog. No
-dependency changes, no new rendering pipeline.
+process over IPC, write to disk. No dependency changes, no new rendering
+pipeline.
+
+**Corrected after checking actual conventions in this codebase:** the
+original draft said "write to disk via Electron's native save dialog" —
+checked, and nothing in this codebase ever uses a save-file dialog
+(`dialog` is only used for blocking message/error boxes, e.g.
+`main/authentication.ts`, `main/helpers/updater.ts`). A blocking save
+dialog on every screenshot would interrupt the stream each time, unlike
+how every actual game screenshot feature (Steam, Xbox, etc.) works.
+**Decision:** auto-save silently to `app.getPath('pictures')/Greenlight/`
+as `greenlight-<timestamp>.png`, no dialog, no interruption. Trigger via
+both a gamebar button and a keybind, mirroring exactly how the existing
+debug overlay toggle already works in the same file (button with an
+icon in the gamebar, plus a `window.addEventListener('keypress', ...)`
+shortcut) rather than inventing a new interaction pattern.
 
 ### 5. Local co-op (Remote Play only)
 
