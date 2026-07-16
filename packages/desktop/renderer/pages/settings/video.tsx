@@ -91,7 +91,7 @@ function SettingsVideo() {
 
                     <p>
                         <label>{t('settings.videoAudio.clarityBoostLabel')}</label>
-                        <input type="range" min="0" max="1" step="0.05" value={settings.clarity_boost_strength} onChange={ setClarityBoost } />
+                        <input type='range' min='0' max='1' step='0.05' value={settings.clarity_boost_strength} onChange={ setClarityBoost } />
                         ({ settings.clarity_boost_strength })
                         <br />
                         <small>{t('settings.videoAudio.clarityBoostDescription')}</small>
