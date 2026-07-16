@@ -7,3 +7,4 @@ dist/
 packages/pages/public
 .superpowers/
 **/tsconfig.tsbuildinfo
+graphify-out/
