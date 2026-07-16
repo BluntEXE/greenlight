@@ -41,9 +41,10 @@ builds on) already uses.
 - A dedicated Nexus/guide-button touch control — already covered by the
   existing View+Menu combo.
 - Modifying `xbox-xcloud-player`. All input dispatch goes through its
-  existing public `GamepadDriver.pressButton(index, button)` method
-  (already used internally for the keyboard-driven Nexus trick) — same
-  non-goal established in the Clarity Boost and codec-selection specs.
+  existing public `InputChannel.queueGamepadState()` method (see "Input
+  dispatch" below for why this specific method, not `pressButton()`) —
+  same non-goal established in the Clarity Boost and codec-selection
+  specs.
 
 ## Architecture
 
@@ -69,21 +70,50 @@ Three built-in presets, each just a zone-assignment map:
 - **Minimal**: left-outer = D-pad only, right-inner = A (large) + B
   (smaller). Largest touch targets of the three, for puzzle/simple games.
 
-### Input dispatch
+### Input dispatch (corrected after tracing the real send path)
 
-Each on-screen control, on touch, calls the existing
-`GamepadDriver.pressButton(index, button)` method (index `0`, since touch
-input plays as the primary local player) for discrete buttons. Analog
-controls (sticks, triggers) need a continuous value rather than a single
-press/release — `pressButton` as it exists today only supports discrete
-taps (it sets a value then clears it after 60ms, per
-`Driver/Gamepad.ts:102-110`). **This is a real gap Phase A's plan must
-address**: either extend `GamepadDriver` with a method that sets a
-continuous value until touch-release (not just a timed pulse), or feed
-analog state through the `_shadowGamepad` mechanism `pressButton` already
-writes to, holding the value rather than the timeout-and-clear pattern.
-This needs to be resolved as an early implementation task, not assumed —
-call it out explicitly in the Phase A plan.
+The original draft of this section assumed `GamepadDriver.pressButton()`
+(a 60ms pulse-and-clear) was the dispatch mechanism, and flagged "held"
+buttons and analog sticks/triggers as an unresolved gap. Tracing
+`Channel/Input.ts`'s actual per-frame send loop (`start()`,
+`Channel/Input.ts:109-156`, runs every 16ms unconditionally once the
+channel opens) found a better foundation:
+
+- `InputChannel.queueGamepadState(input: InputFrame)` /
+  `queueGamepadStates(inputs)` (`Channel/Input.ts:296-301`) push directly
+  onto `this._gamepadFrames`, which the 16ms interval drains and sends
+  every tick — **completely independent of `input_legacykeyboard` /
+  `input_newgamepad` mode**, physical controller presence, or any other
+  input path. This is the same queue physical gamepads and the
+  keyboard-merge path both feed; it's the universal entry point, not an
+  internal implementation detail.
+- Two mode-*dependent* alternatives exist and were ruled out:
+  `GamepadDriver.pressButton()` / `KeyboardDriver.pressButton()` (routed
+  correctly by `InputChannel.pressButton(index, button)`, which Greenlight
+  itself already calls for its own Nexus gamebar button —
+  `renderer/pages/stream/[serverid].tsx:266`) both only fire a **60ms
+  pulse**, wrong for "hold to walk" D-pad/face-button behavior. Worse,
+  `KeyboardDriver`'s merge path (which `pressButton` routes through when
+  `input_legacykeyboard === true`) is gated behind a toggle — **"Enable
+  Keyboard to Gamepad" in Settings → Input** — that a meaningful number of
+  real users (confirmed: the person building this has it disabled right
+  now) turn off specifically because the app's own UI warns that mixing
+  it with Mouse & Keyboard mode "will cause conflicts." Building touch
+  dispatch on that path would make touch controls silently stop working
+  the moment a user (reasonably) disables that toggle.
+
+**Decision:** the touch overlay owns its own `InputFrame`-shaped held-state
+object (all fields default `0`, `GamepadIndex: 0`), mutated directly by
+touch-start/move/end handlers — buttons set to `0`/`1` and held until
+release, analog fields (stick axes, triggers) set to their live float
+value, not a pulse. On a ~16ms interval matching the channel's own send
+cadence, push the current frame via
+`xPlayer.getChannelProcessor('input').queueGamepadState(frame)`. One
+mechanism, correct for both digital and analog controls, and unaffected
+by any input-mode setting. Same non-goal as before: this doesn't touch
+`xbox-xcloud-player`, it only calls two already-public methods
+(`getChannelProcessor`, `queueGamepadState`) the way the codebase already
+calls sibling methods on the same object.
 
 ### Phase A scope (this is the plan written next)
 
@@ -93,10 +123,11 @@ call it out explicitly in the Phase A plan.
 2. The 3 built-in presets as static data.
 3. A simple preset picker (shown when touch is enabled and no
    customization exists yet for the current title) defaulting to Standard.
-4. Discrete-button dispatch via `pressButton()`.
-5. Resolve the analog-input dispatch gap above (sticks/triggers) — at
-   minimum for the Standard and Racing presets, which both need it.
-6. Only active when `settings.input_touch` is already enabled (existing
+4. Held-state input dispatch via direct `queueGamepadState()` injection,
+   covering both digital and analog controls uniformly (see corrected
+   "Input dispatch" section above) — mode-independent, works regardless
+   of the "Enable Keyboard to Gamepad" setting.
+5. Only active when `settings.input_touch` is already enabled (existing
    setting) — no new top-level toggle needed.
 
 ### Phase B scope (future plan, not detailed further here)
