@@ -1,7 +1,6 @@
 import React from 'react'
 import { getTouchLayoutPreset, InputFrameKey, TouchControl, ZoneName } from '../../../lib/touchLayouts'
 import { getStickAxes, getDpadDirection } from '../../../lib/touchGestures'
-import './touchoverlay.css'
 
 interface TouchOverlayProps {
     xPlayer: any
