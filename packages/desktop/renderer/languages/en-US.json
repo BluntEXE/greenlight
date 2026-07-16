@@ -255,6 +255,7 @@
       "enableMic": "Enable mic",
       "disableMic": "Disable mic",
       "debugTitle": "Debug",
+      "screenshotTitle": "Take Screenshot",
       "itsTakingALittleLonger": "It's taking a little longer.. Your stream may start soon.",
       "startingConnection": "Starting connection...",
       "connectingToConsole": "Connecting to console...",

@@ -249,6 +249,9 @@ function StreamComponent({
                 case 126:
                     toggleDebug()
                     break
+                case 112:
+                    takeScreenshot()
+                    break
             }
         }
         window.addEventListener('keypress', keyboardPressEvent)
@@ -306,6 +309,35 @@ function StreamComponent({
         } else {
             debugElement.className = 'hidden'
         }
+    }
+
+    function takeScreenshot() {
+        const videoElement = document.querySelector('#streamComponent video') as HTMLVideoElement
+        if (videoElement === null) {
+            console.log('takeScreenshot: no video element found, stream may not be connected yet')
+            return
+        }
+
+        const canvas = document.createElement('canvas')
+        canvas.width = videoElement.videoWidth
+        canvas.height = videoElement.videoHeight
+
+        const context = canvas.getContext('2d')
+        if (context === null) {
+            console.log('takeScreenshot: failed to get 2d canvas context')
+            return
+        }
+
+        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
+
+        const dataUrl = canvas.toDataURL('image/png')
+        const base64Image = dataUrl.replace('data:image/png;base64,', '')
+
+        Ipc.send('screenshot', 'saveScreenshot', { image: base64Image }).then((result: any) => {
+            console.log('Screenshot saved:', result.path)
+        }).catch((error) => {
+            console.log('Failed to save screenshot:', error)
+        })
     }
 
     function drawWaitingTimes(seconds) {
@@ -418,6 +450,9 @@ function StreamComponent({
                             width: '25%',
                             textAlign: 'right',
                         }}>
+                            <Button label={<i className="fa-solid fa-camera"></i>} title={t("streamWindow.screenshotTitle")} onClick={(e) => {
+                                e.target.blur(); takeScreenshot()
+                            }}></Button> &nbsp;
                             <Button label={<i className="fa-solid fa-bug"></i>} title={t("streamWindow.debugTitle")} onClick={(e) => {
                                 e.target.blur(); toggleDebug()
                             }}></Button>
