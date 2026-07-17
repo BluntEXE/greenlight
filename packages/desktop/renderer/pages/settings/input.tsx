@@ -137,6 +137,13 @@ function SettingsInput() {
         })
     }
 
+    function setLocalCoop(){
+        setSettings({
+            ...settings,
+            input_local_coop: (! settings.input_local_coop),
+        })
+    }
+
     function setKeyConfig(button:string, event) {
         let ckeys = controllerKeys
         if(ckeys === undefined) {
@@ -208,6 +215,14 @@ function SettingsInput() {
                             <input type='checkbox' onChange={ setLegacyInput } checked={!settings.input_newgamepad} />&nbsp; ({ !settings.input_newgamepad ? t('settings.input.enabledLabel') : t('settings.input.disabledLabel')})
                         </label><br />
                         <small>{t('settings.input.enableLegacyDescription')}</small>
+                    </p>
+
+                    <p>
+                        <label>{t('settings.input.enableLocalCoop')}</label>
+                        <label style={{ minWidth: 0 }}>
+                            <input type='checkbox' onChange={ setLocalCoop } checked={settings.input_local_coop} />&nbsp; ({ settings.input_local_coop ? t('settings.input.enabledLabel') : t('settings.input.disabledLabel')})
+                        </label><br />
+                        <small>{t('settings.input.enableLocalCoopDescription')}</small>
                     </p>
                 </Card>
 

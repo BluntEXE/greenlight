@@ -2,7 +2,6 @@ export const defaultSettings = {
     xhome_bitrate: 0,
     xcloud_bitrate: 0,
     video_profiles: [],
-    video_codec: 'h264',
     preferred_game_language: 'en-US',
     controller_vibration: true,
     video_size: 'default',
@@ -36,6 +35,7 @@ export const defaultSettings = {
         n: 'Nexus',
     },
     input_newgamepad: false,
+    input_local_coop: false,
     app_lowresolution: false,
     clarity_boost_strength: 0,
 

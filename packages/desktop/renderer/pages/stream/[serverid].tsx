@@ -9,7 +9,6 @@ import StreamPreload from '../../components/ui/streampreload'
 import Ipc from '../../lib/ipc'
 import { useTranslation } from 'react-i18next'
 import { getClarityBoostFilter } from '../../../lib/clarityBoost'
-import { getCodecMimeType } from '../../../lib/codecPreference'
 
 function Stream() {
     const router = useRouter()
@@ -37,14 +36,16 @@ function Stream() {
             document.getElementById('streamComponentHolder').innerHTML = '<div id="streamComponent" class="size_'+settings.video_size+'"></div>'
             xPlayer.bind()
 
+            // Gate whether a second local controller can join as another player
+            xPlayer._inputDriver.localCoopEnabled = settings.input_local_coop
+
             // Set bitrates & video codec profiles
             if((streamType === 'cloud') ? settings.xcloud_bitrate : settings.xhome_bitrate > 0){
                 xPlayer.setVideoBitrate((streamType === 'cloud') ? settings.xcloud_bitrate : settings.xhome_bitrate)
             }
 
-            const codecMimeType = getCodecMimeType(settings.video_codec)
-            if(settings.video_profiles.length > 0 || codecMimeType !== 'video/H264'){
-                xPlayer.setCodecPreferences(codecMimeType, { profiles: settings.video_profiles || [] }) // profiles only meaningfully filter H.264; harmless no-op for AV1/HEVC
+            if(settings.video_profiles.length > 0){
+                xPlayer.setCodecPreferences('video/H264', { profiles: settings.video_profiles })
             }
 
             // Stream is ready so we start the player
@@ -162,6 +163,10 @@ function Stream() {
                         // Client has been disconnected. Lets return to home.
                         // xPlayer.close()
                         console.log('Client has been disconnected. Returning to prev page.')
+                        window.history.back()
+
+                    } else if(event.state === 'error') {
+                        alert(t('errors.streamNegotiationFailed'))
                         window.history.back()
                     }
                 }

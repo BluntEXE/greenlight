@@ -11,6 +11,19 @@ The application runs on Linux, macOS, Windows and Steam Deck.
 
 _DISCLAIMER: Greenlight is not affiliated with Microsoft, Xbox or Moonlight. All rights and trademarks are property of their respective owners._
 
+## About this fork
+
+This is a fork of [unknownskl/greenlight](https://github.com/unknownskl/greenlight), extended with features [Better xCloud](https://github.com/redphx/better-xcloud) has that Greenlight didn't.
+
+**Added:**
+- **Clarity Boost.** CSS-filter video sharpening. Adjustable strength in Settings > Video & Audio.
+- **Custom touch layouts.** Three presets (Standard, Racing, Minimal) for on-screen touch controls. Selectable in Settings > Input.
+- **Screenshot capture.** Gamebar button or the `P` key. Saves to `~/Pictures/Greenlight/`.
+- **Local co-op (Remote Play only).** A second locally-connected controller can join as another player. Opt-in toggle in Settings > Input, off by default. This needed a fix in the `xbox-xcloud-player` dependency itself (see `patches/`): a `return` where the code meant `continue` was silently skipping multi-controller detection.
+- **Graceful stream-negotiation errors.** `setRemoteOffer()` now properly catches a failed `setRemoteDescription()` instead of losing the rejection to an ineffective synchronous `try/catch`, so a negotiation failure shows a clean message instead of crashing with an unhandled rejection.
+
+**Dependency patch:** this fork uses [`patch-package`](https://github.com/ds300/patch-package) to fix the local co-op bug in `xbox-xcloud-player@0.2.11` without forking that package outright. The patch lives in `patches/` and applies automatically on install.
+
 ## Features
 
 - Stream video and audio from the Xbox One and Xbox Series
@@ -87,7 +100,7 @@ Click on the Xbox logo at the top-left. It will ask you to confirm to close the 
 
 Clone the repository:
 
-    git clone https://github.com/unknownskl/greenlight.git
+    git clone https://github.com/BluntEXE/greenlight.git
     cd greenlight
     git submodule update --init --recursive
 

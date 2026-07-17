@@ -1,0 +1,147 @@
+diff --git a/node_modules/xbox-xcloud-player/dist/Driver/Gamepad.js b/node_modules/xbox-xcloud-player/dist/Driver/Gamepad.js
+index d2b16a1..52720ad 100644
+--- a/node_modules/xbox-xcloud-player/dist/Driver/Gamepad.js
++++ b/node_modules/xbox-xcloud-player/dist/Driver/Gamepad.js
+@@ -30,6 +30,7 @@ class GamepadDriver {
+             },
+         };
+         this._activeGamepads = { 0: false, 1: false, 2: false, 3: false };
++        this.localCoopEnabled = true;
+         this._nexusOverrideN = false;
+         this._downFunc = (e) => { this.onKeyChange(e, true); };
+         this._upFunc = (e) => { this.onKeyChange(e, false); };
+@@ -43,26 +44,29 @@ class GamepadDriver {
+         this._activeGamepads = { 0: false, 1: false, 2: false, 3: false };
+         // console.log('xCloudPlayer Driver/Gamepad.ts - Start collecting events:', this._gamepads)
+         this._activeGamepadsInterval = setInterval(() => {
++            if (!this.localCoopEnabled) {
++                return;
++            }
+             var _a, _b, _c;
+             const gamepads = navigator.getGamepads();
+             for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
+                 // Skip gamepad 0 as we always keep this one connected
+                 if (gamepad === 0) {
+-                    return;
++                    continue;
+                 }
+                 // Check if the control channel is open
+                 if (((_a = this._application) === null || _a === void 0 ? void 0 : _a.getChannelProcessor('control')) === undefined) {
+-                    return;
++                    continue;
+                 }
+                 if (gamepads[gamepad] === null && this._activeGamepads[gamepad] === true) {
+                     (_b = this._application) === null || _b === void 0 ? void 0 : _b.getChannelProcessor('control').sendGamepadRemoved(gamepad);
+                     this._activeGamepads[gamepad] = false;
+-                    return;
++                    continue;
+                 }
+                 if (gamepads[gamepad] !== null && this._activeGamepads[gamepad] === false) {
+                     (_c = this._application) === null || _c === void 0 ? void 0 : _c.getChannelProcessor('control').sendGamepadAdded(gamepad);
+                     this._activeGamepads[gamepad] = true;
+-                    return;
++                    continue;
+                 }
+             }
+         }, 500);
+diff --git a/node_modules/xbox-xcloud-player/dist/Library.js b/node_modules/xbox-xcloud-player/dist/Library.js
+index 4db9777..2b48c6b 100644
+--- a/node_modules/xbox-xcloud-player/dist/Library.js
++++ b/node_modules/xbox-xcloud-player/dist/Library.js
+@@ -501,15 +501,16 @@ class xCloudPlayer {
+     }
+     setRemoteOffer(sdpdata) {
+         var _a;
+-        try {
+-            (_a = this._webrtcClient) === null || _a === void 0 ? void 0 : _a.setRemoteDescription({
+-                type: 'answer',
+-                sdp: sdpdata,
++        const setPromise = (_a = this._webrtcClient) === null || _a === void 0 ? void 0 : _a.setRemoteDescription({
++            type: 'answer',
++            sdp: sdpdata,
++        });
++        if (setPromise) {
++            setPromise.catch((e) => {
++                console.log('xCloudPlayer Library.ts - setRemoteOffer() Remote SDP is not valid:', sdpdata, e);
++                this.getEventBus().emit('connectionstate', { state: 'error', message: e === null || e === void 0 ? void 0 : e.message });
+             });
+         }
+-        catch (e) {
+-            console.log('xCloudPlayer Library.ts - setRemoteOffer() Remote SDP is not valid:', sdpdata);
+-        }
+         this.getEventBus().emit('connectionstate', { state: 'connecting' });
+     }
+     reset() {
+diff --git a/node_modules/xbox-xcloud-player/src/Driver/Gamepad.ts b/node_modules/xbox-xcloud-player/src/Driver/Gamepad.ts
+index 1968e3c..4eeaee6 100644
+--- a/node_modules/xbox-xcloud-player/src/Driver/Gamepad.ts
++++ b/node_modules/xbox-xcloud-player/src/Driver/Gamepad.ts
+@@ -38,6 +38,8 @@ export default class GamepadDriver implements Driver {
+     _activeGamepads = { 0: false, 1: false, 2: false, 3: false}
+     _activeGamepadsInterval
+ 
++    localCoopEnabled = true
++
+     _nexusOverrideN = false
+ 
+     // constructor() {
+@@ -52,26 +54,28 @@ export default class GamepadDriver implements Driver {
+         
+         // console.log('xCloudPlayer Driver/Gamepad.ts - Start collecting events:', this._gamepads)
+         this._activeGamepadsInterval = setInterval(() => {
++            if (!this.localCoopEnabled) { return }
++
+             const gamepads = navigator.getGamepads()
+ 
+             for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
+ 
+                 // Skip gamepad 0 as we always keep this one connected
+-                if(gamepad === 0) {return}
++                if(gamepad === 0) {continue}
+ 
+                 // Check if the control channel is open
+-                if(this._application?.getChannelProcessor('control') === undefined) {return}
++                if(this._application?.getChannelProcessor('control') === undefined) {continue}
+ 
+                 if(gamepads[gamepad] === null && this._activeGamepads[gamepad] === true) {
+                     this._application?.getChannelProcessor('control').sendGamepadRemoved(gamepad)
+                     this._activeGamepads[gamepad] = false
+-                    return
++                    continue
+                 }
+ 
+                 if(gamepads[gamepad] !== null && this._activeGamepads[gamepad] === false) {
+                     this._application?.getChannelProcessor('control').sendGamepadAdded(gamepad)
+                     this._activeGamepads[gamepad] = true
+-                    return
++                    continue
+                 }
+             }
+         }, 500)
+diff --git a/node_modules/xbox-xcloud-player/src/Library.ts b/node_modules/xbox-xcloud-player/src/Library.ts
+index 655b30b..f0d22e4 100644
+--- a/node_modules/xbox-xcloud-player/src/Library.ts
++++ b/node_modules/xbox-xcloud-player/src/Library.ts
+@@ -555,13 +555,16 @@ export default class xCloudPlayer {
+     }
+ 
+     setRemoteOffer(sdpdata:string){
+-        try {
+-            this._webrtcClient?.setRemoteDescription({
+-                type: 'answer',
+-                sdp: sdpdata,
++        const setPromise = this._webrtcClient?.setRemoteDescription({
++            type: 'answer',
++            sdp: sdpdata,
++        })
++
++        if(setPromise){
++            setPromise.catch((e) => {
++                console.log('xCloudPlayer Library.ts - setRemoteOffer() Remote SDP is not valid:', sdpdata, e)
++                this.getEventBus().emit('connectionstate', { state: 'error', message: e?.message })
+             })
+-        } catch(e){
+-            console.log('xCloudPlayer Library.ts - setRemoteOffer() Remote SDP is not valid:', sdpdata)
+         }
+ 
+         this.getEventBus().emit('connectionstate', { state: 'connecting'})

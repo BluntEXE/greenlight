@@ -82,6 +82,8 @@
         "legacyWarning": "Using the Mouse & Keyboard driver together with the Gamepad keyboard mappings will cause conflicts",
         "enableLegacy": "Enable Keyboard to Gamepad",
         "enableLegacyDescription": "(Disabling this feature will disable the keyboard to gamepad mapping and only allows controls from the gamepad.)",
+        "enableLocalCoop": "Enable Local Co-op",
+        "enableLocalCoopDescription": "(Remote Play only. Allows a second locally-connected controller to join as another player. Off by default to avoid an unplanned controller joining your session.)",
         "controllerDetectedTitle": "Controllers detected",
         "controllerDetectedDescription": "If you have a controller connected but it is not showing up, try to press a button on the controller to detect it.",
         "noControllerDetected": "No controller detected",
@@ -101,10 +103,6 @@
         "setH264ProfileValueHigh": "High",
         "setH264ProfileValueMedium": "Medium",
         "setH264ProfileValueLow": "Low",
-        "setVideoCodecLabel": "Preferred Video Codec",
-        "setVideoCodecValueH264": "H.264 (default)",
-        "setVideoCodecValueAV1": "AV1",
-        "setVideoCodecValueHEVC": "HEVC (H.265)",
         "forceRegionTitle": "Force region",
         "setRegionLabel": "Set region:",
         "setRegionValueDisabled": "Disabled",
@@ -291,7 +289,8 @@
       "unableToStartStreamSession": "Unable to start stream session on console. The console is not connected to the Xbox servers. This occasionally happens when there is an update or when the user is not signed in to the console. Please hard reboot your console and try again.",
       "streamErrorResult": "Stream error result:",
       "details": "Details:",
-      "failedToGetPlayerState": "Failed to get player state. Error details:"
+      "failedToGetPlayerState": "Failed to get player state. Error details:",
+      "streamNegotiationFailed": "Failed to negotiate the stream. Please try starting the stream again."
     }
   }
 }
