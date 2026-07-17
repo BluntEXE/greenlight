@@ -1,3 +1,160 @@
+diff --git a/node_modules/xbox-xcloud-player/dist/Channel/Input.js b/node_modules/xbox-xcloud-player/dist/Channel/Input.js
+index 4ea0bcc..b5879a1 100644
+--- a/node_modules/xbox-xcloud-player/dist/Channel/Input.js
++++ b/node_modules/xbox-xcloud-player/dist/Channel/Input.js
+@@ -337,7 +337,7 @@ class InputChannel extends Base_1.default {
+         // console.log('got onpointerscroll', e)
+     }
+     onKeyDown(event) {
+-        if (this._mouseActive === true && this._mouseLocked === true) {
++        if ((this._mouseActive === true && this._mouseLocked === true) || this._client._config.input_legacykeyboard === false) {
+             if (this._keyboardButtonsState[event.keyCode] !== true) {
+                 this._keyboardButtonsState[event.keyCode] = true;
+                 // console.log('keyDown', event.keyCode)
+@@ -357,7 +357,7 @@ class InputChannel extends Base_1.default {
+         }
+     }
+     onKeyUp(event) {
+-        if (this._mouseActive === true && this._mouseLocked === true) {
++        if ((this._mouseActive === true && this._mouseLocked === true) || this._client._config.input_legacykeyboard === false) {
+             this._keyboardButtonsState[event.keyCode] = false;
+             // console.log('keyUp', event.keyCode)
+             this._keyboardFrames.push({
+diff --git a/node_modules/xbox-xcloud-player/dist/Channel/Message.js b/node_modules/xbox-xcloud-player/dist/Channel/Message.js
+index 8ae20f3..7d253d6 100644
+--- a/node_modules/xbox-xcloud-player/dist/Channel/Message.js
++++ b/node_modules/xbox-xcloud-player/dist/Channel/Message.js
+@@ -20,6 +20,12 @@ class MessageChannel extends Base_1.default {
+         console.log('xCloudPlayer Channel/Message.ts - [' + this._channelName + '] onMessage:', event);
+         const jsonMessage = JSON.parse(event.data);
+         console.log('xCloudPlayer Channel/Message.ts - Received json:', jsonMessage);
++        if (jsonMessage.type === 'TransactionStart' && jsonMessage.target === '/streaming/systemUi/messages/ShowVirtualKeyboard') {
++            this.handleShowVirtualKeyboard(jsonMessage);
++        }
++        if (jsonMessage.type === 'TransactionStart' && jsonMessage.target === '/streaming/systemUi/messages/ShowMessageDialog') {
++            this.handleShowMessageDialog(jsonMessage);
++        }
+         if (jsonMessage.type === 'HandshakeAck') {
+             // Handshake has been acked.
+             this.getClient().getChannelProcessor('control').start();
+@@ -80,6 +86,117 @@ class MessageChannel extends Base_1.default {
+             'cv': '',
+         };
+     }
++    handleShowVirtualKeyboard(data) {
++        const content = JSON.parse(data.content);
++        this.showTextInputOverlay(content.TitleText || content.DescriptionText || '', content.DefaultText || '', content.MaxLength || 0, (text) => {
++            if (text === null) {
++                this.sendTransaction(data.id, { Result: 1, Text: '' });
++                return;
++            }
++            this.sendTransaction(data.id, { Result: 0, Text: text });
++        });
++    }
++    showTextInputOverlay(title, defaultText, maxLength, callback) {
++        if (document.pointerLockElement) {
++            document.exitPointerLock();
++        }
++        const overlay = document.createElement('div');
++        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999999;display:flex;align-items:center;justify-content:center;';
++        const box = document.createElement('div');
++        box.className = 'component_card padbottom';
++        box.style.cssText = 'min-width:320px;max-width:480px;';
++        const label = document.createElement('h1');
++        label.textContent = title;
++        const input = document.createElement('input');
++        input.type = 'text';
++        input.className = 'text';
++        input.value = defaultText;
++        if (maxLength > 0) {
++            input.maxLength = maxLength;
++        }
++        input.style.cssText = 'width:100%;box-sizing:border-box;margin:10px 0 20px 0;';
++        const buttonRow = document.createElement('div');
++        buttonRow.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;';
++        const cancelBtn = document.createElement('button');
++        cancelBtn.className = 'btn';
++        cancelBtn.textContent = 'Cancel';
++        const okBtn = document.createElement('button');
++        okBtn.className = 'btn btn-primary';
++        okBtn.textContent = 'OK';
++        const cleanup = (result) => {
++            document.body.removeChild(overlay);
++            callback(result);
++        };
++        cancelBtn.onclick = () => cleanup(null);
++        okBtn.onclick = () => cleanup(input.value);
++        input.addEventListener('keydown', (e) => {
++            e.stopPropagation();
++            if (e.key === 'Enter') {
++                cleanup(input.value);
++            }
++            if (e.key === 'Escape') {
++                cleanup(null);
++            }
++        });
++        buttonRow.appendChild(cancelBtn);
++        buttonRow.appendChild(okBtn);
++        box.appendChild(label);
++        box.appendChild(input);
++        box.appendChild(buttonRow);
++        overlay.appendChild(box);
++        document.body.appendChild(overlay);
++        input.focus();
++    }
++    handleShowMessageDialog(data) {
++        const content = JSON.parse(data.content);
++        this.showMessageDialogOverlay(content, (resultIndex) => {
++            this.sendTransaction(data.id, { Result: resultIndex });
++        });
++    }
++    showMessageDialogOverlay(content, callback) {
++        if (document.pointerLockElement) {
++            document.exitPointerLock();
++        }
++        const overlay = document.createElement('div');
++        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999999;display:flex;align-items:center;justify-content:center;';
++        const box = document.createElement('div');
++        box.className = 'component_card padbottom';
++        box.style.cssText = 'min-width:320px;max-width:480px;';
++        const title = document.createElement('h1');
++        title.textContent = content.TitleText || '';
++        const body = document.createElement('p');
++        body.textContent = content.ContentText || '';
++        const buttonRow = document.createElement('div');
++        buttonRow.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:10px;';
++        const cleanup = (resultIndex) => {
++            document.removeEventListener('keydown', escHandler, true);
++            document.body.removeChild(overlay);
++            callback(resultIndex);
++        };
++        const escHandler = (e) => {
++            if (e.key === 'Escape') {
++                e.stopPropagation();
++                cleanup(content.CancelIndex ?? 0);
++            }
++        };
++        document.addEventListener('keydown', escHandler, true);
++        const labels = [content.CommandLabel1, content.CommandLabel2, content.CommandLabel3];
++        labels.forEach((label, index) => {
++            if (!label) {
++                return;
++            }
++            const btn = document.createElement('button');
++            btn.className = (index === content.CancelIndex) ? 'btn' : 'btn btn-primary';
++            btn.textContent = label;
++            btn.onclick = () => cleanup(index);
++            buttonRow.appendChild(btn);
++        });
++        box.appendChild(title);
++        box.appendChild(body);
++        box.appendChild(buttonRow);
++        overlay.appendChild(box);
++        document.body.appendChild(overlay);
++    }
+     sendTransaction(id, data) {
+         const transaction = JSON.stringify({
+             'type': 'TransactionComplete',
 diff --git a/node_modules/xbox-xcloud-player/dist/Driver/Gamepad.js b/node_modules/xbox-xcloud-player/dist/Driver/Gamepad.js
 index d2b16a1..52720ad 100644
 --- a/node_modules/xbox-xcloud-player/dist/Driver/Gamepad.js
@@ -72,6 +229,188 @@ index 4db9777..2b48c6b 100644
          this.getEventBus().emit('connectionstate', { state: 'connecting' });
      }
      reset() {
+diff --git a/node_modules/xbox-xcloud-player/src/Channel/Input.ts b/node_modules/xbox-xcloud-player/src/Channel/Input.ts
+index c605282..672e205 100644
+--- a/node_modules/xbox-xcloud-player/src/Channel/Input.ts
++++ b/node_modules/xbox-xcloud-player/src/Channel/Input.ts
+@@ -454,7 +454,7 @@ export default class InputChannel extends BaseChannel {
+ 
+ 
+     onKeyDown(event){
+-        if(this._mouseActive === true && this._mouseLocked === true){
++        if((this._mouseActive === true && this._mouseLocked === true) || this._client._config.input_legacykeyboard === false){
+             if(this._keyboardButtonsState[event.keyCode] !== true){
+                 this._keyboardButtonsState[event.keyCode] = true
+ 
+@@ -478,7 +478,7 @@ export default class InputChannel extends BaseChannel {
+     }
+ 
+     onKeyUp(event){
+-        if(this._mouseActive === true && this._mouseLocked === true){
++        if((this._mouseActive === true && this._mouseLocked === true) || this._client._config.input_legacykeyboard === false){
+             this._keyboardButtonsState[event.keyCode] = false
+ 
+             // console.log('keyUp', event.keyCode)
+diff --git a/node_modules/xbox-xcloud-player/src/Channel/Message.ts b/node_modules/xbox-xcloud-player/src/Channel/Message.ts
+index 0e7c744..781d454 100644
+--- a/node_modules/xbox-xcloud-player/src/Channel/Message.ts
++++ b/node_modules/xbox-xcloud-player/src/Channel/Message.ts
+@@ -21,6 +21,14 @@ export default class MessageChannel extends BaseChannel {
+         const jsonMessage = JSON.parse(event.data)
+         console.log('xCloudPlayer Channel/Message.ts - Received json:', jsonMessage)
+ 
++        if(jsonMessage.type === 'TransactionStart' && jsonMessage.target === '/streaming/systemUi/messages/ShowVirtualKeyboard'){
++            this.handleShowVirtualKeyboard(jsonMessage)
++        }
++
++        if(jsonMessage.type === 'TransactionStart' && jsonMessage.target === '/streaming/systemUi/messages/ShowMessageDialog'){
++            this.handleShowMessageDialog(jsonMessage)
++        }
++
+         if(jsonMessage.type === 'HandshakeAck'){
+             // Handshake has been acked.
+ 
+@@ -95,6 +103,140 @@ export default class MessageChannel extends BaseChannel {
+         }
+     }
+ 
++    handleShowVirtualKeyboard(data) {
++        const content = JSON.parse(data.content)
++        this.showTextInputOverlay(content.TitleText || content.DescriptionText || '', content.DefaultText || '', content.MaxLength || 0, (text) => {
++            if(text === null){
++                this.sendTransaction(data.id, { Result: 1, Text: '' })
++                return
++            }
++
++            this.sendTransaction(data.id, { Result: 0, Text: text })
++        })
++    }
++
++    showTextInputOverlay(title, defaultText, maxLength, callback) {
++        if(document.pointerLockElement){
++            document.exitPointerLock()
++        }
++
++        const overlay = document.createElement('div')
++        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999999;display:flex;align-items:center;justify-content:center;'
++
++        const box = document.createElement('div')
++        box.className = 'component_card padbottom'
++        box.style.cssText = 'min-width:320px;max-width:480px;'
++
++        const label = document.createElement('h1')
++        label.textContent = title
++
++        const input = document.createElement('input')
++        input.type = 'text'
++        input.className = 'text'
++        input.value = defaultText
++        if(maxLength > 0){
++            input.maxLength = maxLength
++        }
++        input.style.cssText = 'width:100%;box-sizing:border-box;margin:10px 0 20px 0;'
++
++        const buttonRow = document.createElement('div')
++        buttonRow.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;'
++
++        const cancelBtn = document.createElement('button')
++        cancelBtn.className = 'btn'
++        cancelBtn.textContent = 'Cancel'
++        const okBtn = document.createElement('button')
++        okBtn.className = 'btn btn-primary'
++        okBtn.textContent = 'OK'
++
++        const cleanup = (result) => {
++            document.body.removeChild(overlay)
++            callback(result)
++        }
++
++        cancelBtn.onclick = () => cleanup(null)
++        okBtn.onclick = () => cleanup(input.value)
++        input.addEventListener('keydown', (e) => {
++            e.stopPropagation()
++            if(e.key === 'Enter'){
++                cleanup(input.value)
++            }
++            if(e.key === 'Escape'){
++                cleanup(null)
++            }
++        })
++
++        buttonRow.appendChild(cancelBtn)
++        buttonRow.appendChild(okBtn)
++        box.appendChild(label)
++        box.appendChild(input)
++        box.appendChild(buttonRow)
++        overlay.appendChild(box)
++        document.body.appendChild(overlay)
++        input.focus()
++    }
++
++    handleShowMessageDialog(data) {
++        const content = JSON.parse(data.content)
++        this.showMessageDialogOverlay(content, (resultIndex) => {
++            this.sendTransaction(data.id, { Result: resultIndex })
++        })
++    }
++
++    showMessageDialogOverlay(content, callback) {
++        if(document.pointerLockElement){
++            document.exitPointerLock()
++        }
++
++        const overlay = document.createElement('div')
++        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999999;display:flex;align-items:center;justify-content:center;'
++
++        const box = document.createElement('div')
++        box.className = 'component_card padbottom'
++        box.style.cssText = 'min-width:320px;max-width:480px;'
++
++        const title = document.createElement('h1')
++        title.textContent = content.TitleText || ''
++
++        const body = document.createElement('p')
++        body.textContent = content.ContentText || ''
++
++        const buttonRow = document.createElement('div')
++        buttonRow.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:10px;'
++
++        const cleanup = (resultIndex) => {
++            document.removeEventListener('keydown', escHandler, true)
++            document.body.removeChild(overlay)
++            callback(resultIndex)
++        }
++
++        const escHandler = (e) => {
++            if(e.key === 'Escape'){
++                e.stopPropagation()
++                cleanup(content.CancelIndex ?? 0)
++            }
++        }
++        document.addEventListener('keydown', escHandler, true)
++
++        const labels = [content.CommandLabel1, content.CommandLabel2, content.CommandLabel3]
++        labels.forEach((label, index) => {
++            if(!label){
++                return
++            }
++            const btn = document.createElement('button')
++            btn.className = (index === content.CancelIndex) ? 'btn' : 'btn btn-primary'
++            btn.textContent = label
++            btn.onclick = () => cleanup(index)
++            buttonRow.appendChild(btn)
++        })
++
++        box.appendChild(title)
++        box.appendChild(body)
++        box.appendChild(buttonRow)
++        overlay.appendChild(box)
++        document.body.appendChild(overlay)
++    }
++
+     sendTransaction(id, data) {
+         const transaction = JSON.stringify({
+             'type': 'TransactionComplete',
 diff --git a/node_modules/xbox-xcloud-player/src/Driver/Gamepad.ts b/node_modules/xbox-xcloud-player/src/Driver/Gamepad.ts
 index 1968e3c..4eeaee6 100644
 --- a/node_modules/xbox-xcloud-player/src/Driver/Gamepad.ts

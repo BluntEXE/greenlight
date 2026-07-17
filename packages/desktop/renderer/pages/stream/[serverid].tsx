@@ -203,7 +203,7 @@ function Stream() {
 
                             // Start xPlayer interface
                             setxPlayer(new xCloudPlayer('streamComponent', {
-                                ui_systemui: [],
+                                ui_systemui: [10, 19, 31, 27, 32, -41],
                                 input_touch: settings.input_touch || false,
                                 input_mousekeyboard: settings.input_mousekeyboard || false,
                                 input_legacykeyboard: (settings.input_newgamepad) ? false : true,
